@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, FlatList, Alert } from 'react-native';
 import React, { useEffect, useState, useContext } from 'react';
 import database from '@react-native-firebase/database';
 import { firebase } from '@react-native-firebase/auth';
@@ -9,25 +9,36 @@ import Header from '../Component/Header';
 
 const Checkout = ({ navigation }) => {
     const [payment, setPayment] = useState(false)
-    const { checkout, address, voucher, setVoucher, setCheckout } = useContext(CheckoutContext);
-    const [currentDate, setCurrentDate] = useState('');
+    const { checkout, address, setAddress } = useContext(CheckoutContext);
+    const [listVoucher, setListVoucher] = useState([]);
     const [starUser, setStarUser] = useState();
+    const [total, setTotal] = useState(checkout.total);
+    const [chooseVoucher, setChooseVoucher] = useState({});
     const userID = firebase.auth().currentUser.uid;
-    const total = checkout.total;
     const star = checkout.totalStar;
     const listProduct = checkout.dataCart;
+    const currentDate = new Date().toLocaleString()
 
+    console.log(address);
 
     useEffect(() => {
-        var date = new Date().getDate()
-        var month = new Date().getMonth() + 1
-        var year = new Date().getFullYear()
-        var hours = new Date().getHours()
-        var min = new Date().getMinutes()
-        var sec = new Date().getSeconds()
-        setCurrentDate(
-            date + '/' + month + '/' + year + '  ' + hours + ':' + min + ':' + sec
-        )
+        database()
+            .ref('Myvoucher/' + userID)
+            .on('value', snapshot => {
+                let arr = [];
+                snapshot.forEach(child => {
+                    var item = child.val()
+                    arr.push({
+                        id: child.key,
+                        coin: item.coin,
+                        idVoucher: item.idVoucher,
+                        price: item.price,
+                        title: item.title,
+                        value: item.value,
+                    });
+                })
+                setListVoucher(arr);
+            });
     }, [])
 
     useEffect(() => {
@@ -52,19 +63,26 @@ const Checkout = ({ navigation }) => {
         }).then(() => {
             alert('Đặt hàng thành công.');
         });
+        updateInfo();
+    }
+
+    const updateInfo = async () => {
+        await database()
+            .ref('User/' + userID)
+            .update({
+                myStar: star + starUser,
+            })
+            .then(() => console.log('Data updated.'));
+        await database().ref('Myvoucher/' + userID + '/' + chooseVoucher.id).remove();
+        await database().ref('Cart/' + userID).remove();
+        setAddress({});
     }
 
     return (
         <>
             <ScrollView style={{ flex: 1, backgroundColor: '#fff', marginBottom: 70 }}>
-                <Header text={'Thanh toán'} navigation={navigation}/>
-
-                <View style={{
-                    width: '100%',
-                    padding: 15,
-                    borderBottomWidth: 5,
-                    borderBottomColor: '#DDDDDD',
-                }}>
+                <Header text={'Thanh toán'} navigation={navigation} />
+                <View style={{ padding: 15, borderBottomWidth: 5, borderBottomColor: '#DDDDDD' }}>
                     <CheckoutCart icon={require('../Images/location.png')} text={'Địa chỉ nhận hàng'} />
                     {
                         Object.values(address).length === 0 ? (null) : (
@@ -78,7 +96,6 @@ const Checkout = ({ navigation }) => {
                     <TouchableOpacity
                         style={{
                             width: '100%',
-                            marginRight: 20,
                             justifyContent: 'center',
                             alignItems: 'center',
                             padding: 5,
@@ -98,28 +115,14 @@ const Checkout = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
-                <View style={{
-                    width: '100%',
-                    padding: 15,
-                    borderBottomWidth: 5,
-                    borderBottomColor: '#DDDDDD',
-                }}>
+                <View style={{ padding: 15, borderBottomWidth: 5, borderBottomColor: '#DDDDDD' }}>
                     <CheckoutCart icon={require('../Images/list.png')} text={'Danh sách sản phẩm'} />
                     {
-                        listProduct.map((item, index) => {
-                            return (
-                                <CheckoutItem item={item} />
-                            )
-                        })
+                        listProduct.map((item, index) => { return (<CheckoutItem item={item} />) })
                     }
                 </View>
 
-                <View style={{
-                    width: '100%',
-                    padding: 15,
-                    borderBottomWidth: 5,
-                    borderBottomColor: '#DDDDDD',
-                }}>
+                <View style={{ padding: 15, borderBottomWidth: 5, borderBottomColor: '#DDDDDD' }}>
                     <CheckoutCart icon={require('../Images/luckystar.png')} text={'Điểm tích lũy'} />
                     <View style={{ justifyContent: 'space-between', flexDirection: 'row', paddingLeft: 5, paddingRight: 10 }}>
                         <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Sao may mắn</Text>
@@ -127,115 +130,100 @@ const Checkout = ({ navigation }) => {
                     </View>
                 </View>
 
-                <View style={{
-                    width: '100%',
-                    padding: 15,
-                    borderBottomWidth: 5,
-                    borderBottomColor: '#DDDDDD',
-                }}>
+                <View style={{ padding: 15, borderBottomWidth: 5, borderBottomColor: '#DDDDDD' }}>
                     <CheckoutCart icon={require('../Images/voucher.png')} text={'Voucher giảm giá'} />
                     {
-                        Object.values(voucher).length === 0 ? (null) : (
+                        Object.values(chooseVoucher).length === 0 ? (<FlatList
+                            data={listVoucher}
+                            horizontal
+                            keyExtractor={item => item.id}
+                            renderItem={({ item, index }) => {
+                                if (listVoucher.length === 0) {
+                                    <Text>Không có voucher nào!</Text>
+                                } else {
+                                    return (
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                if (total >= item.value) {
+                                                    Alert.alert('Thông báo', 'Bạn chắc chắn muốn chọn voucher này?', [
+                                                        {
+                                                            text: 'OK', onPress: () => {
+                                                                setChooseVoucher(item)
+                                                                setTotal(total - item.price)
+                                                            }
+                                                        },
+                                                    ],
+                                                        {
+                                                            cancelable: true,
+                                                        },);
+
+                                                } else {
+                                                    alert('Chưa đủ điều kiện');
+                                                }
+                                            }}
+                                            style={{
+                                                width: 250,
+                                                height: 100,
+                                                alignSelf: 'center',
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                backgroundColor: '#FFFF66',
+                                                borderRadius: 10,
+                                                marginRight: 10,
+                                            }}>
+                                            <Image
+                                                source={require('../Images/giftbox.png')}
+                                                style={{ width: 40, height: 40 }} />
+                                            <View style={{ width: '70%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                                                <Text style={{ color: 'red', fontSize: 18, fontWeight: 'bold' }}>
+                                                    {item.title}
+                                                </Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    )
+                                }
+                            }} />) : (
                             <View
                                 style={{
-                                    width: '94%',
+                                    width: 250,
                                     height: 100,
-                                    marginBottom: 10,
                                     alignSelf: 'center',
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    justifyContent: 'space-around',
-                                    backgroundColor: '#FFFF99',
+                                    justifyContent: 'center',
+                                    backgroundColor: '#FFFF66',
                                     borderRadius: 10,
-                                    padding: 10
-                                }}
-                            >
-                                <View style={{
-                                    width: '30%',
-                                    height: '100%',
-                                    justifyContent: 'center',
-                                    alignItems: 'center'
+                                    marginRight: 10,
                                 }}>
-                                    <Image
-                                        source={require('../Images/giftbox.png')}
-                                        style={{ width: 50, height: 50 }} />
-                                    <Text style={{
-                                        color: 'green',
-                                        fontWeight: 'bold',
-                                        fontSize: 18,
-                                        marginTop: 5
-                                    }}>x{voucher.quantity}</Text>
-                                </View>
-
-                                <View style={{
-                                    width: '70%',
-                                    height: '100%',
-                                    justifyContent: 'center',
-                                    alignItems: 'center'
-                                }}>
-                                    <Text
-                                        style={{
-                                            color: 'red',
-                                            textAlign: 'center',
-                                            fontSize: 20,
-                                            fontWeight: 'bold'
-                                        }}>
-                                        {voucher.title}
+                                <Image
+                                    source={require('../Images/giftbox.png')}
+                                    style={{ width: 40, height: 40 }} />
+                                <View style={{ width: '70%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                                    <Text style={{ color: 'red', fontSize: 18, fontWeight: 'bold' }}>
+                                        {chooseVoucher.title}
                                     </Text>
                                 </View>
                             </View>
                         )
                     }
 
-                    <TouchableOpacity
-                        style={{
-                            width: '100%',
-                            marginRight: 20,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            padding: 5,
-                            borderRadius: 5,
-                            flexDirection: 'row',
-                            borderWidth: 1,
-                            borderColor: '#C0C0C0',
-                            backgroundColor: '#fff',
-                        }}
-                        onPress={() => {
-                            navigation.navigate('MyVoucher');
-                        }}>
-                        <Image
-                            source={require('../Images/add.png')}
-                            style={{ width: 25, height: 25, marginRight: 5, tintColor: 'red' }} />
-                        <Text style={{ color: 'red', fontSize: 15 }}>Chọn voucher</Text>
-                    </TouchableOpacity>
                 </View>
 
-                <View style={{
-                    width: '100%',
-                    padding: 15,
-                    borderBottomWidth: 5,
-                    borderBottomColor: '#DDDDDD',
-                }}>
+                <View style={{ padding: 15, borderBottomWidth: 5, borderBottomColor: '#DDDDDD' }}>
                     <CheckoutCart icon={require('../Images/paymethod.png')} text={'Thanh toán'} />
                     <TouchableOpacity
                         style={{
-                            width: '90%',
-                            height: 80,
+                            width: '80%',
+                            height: 50,
                             marginBottom: 10,
                             alignSelf: 'center',
-                            flexDirection: 'row',
                             alignItems: 'center',
-                            justifyContent: 'space-around',
+                            justifyContent: 'center',
                             backgroundColor: 'green',
                             borderRadius: 10,
-                            padding: 10
                         }}>
-                        <Text style={{
-                            color: '#fff',
-                            fontWeight: 'bold',
-                            fontSize: 18,
-                            marginTop: 5
-                        }}>Thanh toán khi nhận hàng</Text>
+                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>Thanh toán khi nhận hàng</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -243,115 +231,50 @@ const Checkout = ({ navigation }) => {
                             setChoosePay(item.title)
                         }}
                         style={{
-                            width: '90%',
-                            height: 80,
-                            marginBottom: 10,
+                            width: '80%',
+                            height: 50,
                             alignSelf: 'center',
-                            flexDirection: 'row',
                             alignItems: 'center',
-                            justifyContent: 'space-around',
+                            justifyContent: 'center',
                             backgroundColor: 'green',
                             borderRadius: 10,
-                            padding: 10
                         }}>
-                        <Text style={{
-                            color: '#fff',
-                            fontWeight: 'bold',
-                            fontSize: 18,
-                            marginTop: 5
-                        }}>Thanh toán khi nhận hàng</Text>
+                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>Thanh toán online</Text>
                     </TouchableOpacity>
                 </View>
-
             </ScrollView>
 
             {/* Nut thanh toan */}
-            <View
-                style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    height: 70,
-                    flexDirection: 'row',
+            <View style={{ position: 'absolute', bottom: 0, height: 70, flexDirection: 'row' }}>
+                <View style={{
+                    width: '75%',
+                    height: '100%',
+                    justifyContent: 'center',
+                    alignItems: 'flex-end',
+                    paddingRight: 15
                 }}>
-                {
-                    Object.values(voucher).length === 0 ? (
-                        <View style={{
-                            width: '75%',
-                            height: '100%',
-                            justifyContent: 'center',
-                            alignItems: 'flex-end',
-                            paddingRight: 15
-                        }}>
-                            <Text style={{ fontSize: 18 }}>Tổng thanh toán</Text>
-                            <Text style={{ fontSize: 20, fontWeight: '500', color: 'red' }}>₫{total}</Text>
-                        </View>
-                    ) : (
-                        <View style={{
-                            width: '75%',
-                            height: '100%',
-                            justifyContent: 'center',
-                            alignItems: 'flex-end',
-                            paddingRight: 15
-                        }}>
-                            <Text style={{ fontSize: 18 }}>Tổng thanh toán</Text>
-                            <Text style={{ fontSize: 20, fontWeight: '500', color: 'red' }}>₫{total - voucher.price}</Text>
-                        </View>
-                    )
-                }
+                    <Text style={{ fontSize: 18 }}>Tổng thanh toán</Text>
+                    <Text style={{ fontSize: 20, fontWeight: '500', color: 'red' }}>₫{total}</Text>
+                </View>
 
-                {
-                    Object.values(address).length === 0 ? (
-                        <View
-                            style={{
-                                width: '25%',
-                                height: '100%',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                backgroundColor: '#CCCCCC',
-                            }}>
-                            <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 18 }}>Đặt hàng</Text>
-                        </View>
-                    ) : (
-                        <TouchableOpacity
-                            onPress={() => {
-                                handleSubmit();
-                                navigation.navigate('Home');
-                                database().ref('Cart/' + userID).remove();
-                                database()
-                                    .ref('User/' + userID)
-                                    .update({
-                                        myStar: starUser + star,
-                                    })
-                                    .then(() => console.log('Data updated.'));
-                                if (Object.values(voucher).length !== 0) {
-                                    var vouQunatity = voucher.quantity
-                                    if (vouQunatity > 1) {
-                                        database()
-                                            .ref('Myvoucher/' + userID + '/' + voucher.id)
-                                            .update({
-                                                quantity: vouQunatity - 1,
-                                            })
-                                            .then(() => console.log('Data updated.'));
-                                    }
-                                    if (vouQunatity = 1) {
-                                        database().ref('Myvoucher/' + userID + '/' + voucher.id).remove();
-                                    }
-                                }
-                                setVoucher({});
-                                setCheckout({});
-
-                            }}
-                            style={{
-                                width: '25%',
-                                height: '100%',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                backgroundColor: '#AA0000'
-                            }}>
-                            <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 18 }}>Đặt hàng</Text>
-                        </TouchableOpacity>
-                    )
-                }
+                <TouchableOpacity
+                    onPress={() => {
+                        if (Object.values(address).length === 0) {
+                            alert('Bạn chưa điền đủ thông tin')
+                        } else {
+                            handleSubmit();
+                            navigation.navigate('Home');
+                        }
+                    }}
+                    style={{
+                        width: '25%',
+                        height: '100%',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: '#AA0000'
+                    }}>
+                    <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 18 }}>Đặt hàng</Text>
+                </TouchableOpacity>
             </View>
         </>
 

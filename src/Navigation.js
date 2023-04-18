@@ -24,8 +24,6 @@ import MyOrder from './User/MyOrder';
 import Checkout from './User/Checkout';
 import AddAddress from './User/AddAddress';
 import OrderDetail from './User/OrderDetail';
-import AddPay from './Admin/AddPay';
-import PayMethod from './User/PayMethod';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,8 +55,6 @@ const Navigation = () => {
                 <Stack.Screen name="AddAddress" component={AddAddress} options={{ headerShown: false}} />
                 <Stack.Screen name="OrderDetail" component={OrderDetail} options={{ headerShown: false}} />
                 <Stack.Screen name="Search" component={SearchProduct} options={{ headerShown: false}} />
-                <Stack.Screen name="AddPay" component={AddPay} options={{ headerShown: false}} />
-                <Stack.Screen name="PayMethod" component={PayMethod} options={{ headerShown: false}} />
             </Stack.Navigator>
         </NavigationContainer>
     )

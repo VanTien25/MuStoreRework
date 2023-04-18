@@ -4,35 +4,23 @@ import { useState, useEffect } from 'react'
 import { ScrollView } from 'react-native'
 import { firebase } from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
+import Header from '../Component/Header';
+import CheckoutCart from '../Component/CheckoutCart';
 
 const OrderDetail = ({ navigation, route }) => {
     const idUser = firebase.auth().currentUser.uid;
-    const [address, setAddress] = useState([]);
-    const [date, setDate] = useState([]);
-    const [item, setItem] = useState([]);
-    const [total, setTotal] = useState([]);
-    const [totalStar, setTotalStar] = useState([]);
-    const [status, setStatus] = useState([]);
-    const idPay = route.params.id;
-    console.log(route);
-
-    useEffect(() => {
-        database()
-            .ref('Payment/' + idUser + '/' + idPay)
-            .on('value', snapshot => {
-                var item = snapshot.val();
-                setAddress(item.address);
-                setDate(item.date);
-                setItem(item.item);
-                setStatus(item.status);
-                setTotal(item.total);
-                setTotalStar(item.totalStar);
-            });
-    }, [])
+    const [address, setAddress] = useState(route.params.address);
+    const [date, setDate] = useState(route.params.date);
+    const [id, setID] = useState(route.params.id);
+    const [item, setItem] = useState(route.params.item);
+    const [total, setTotal] = useState(route.params.total);
+    const [totalStar, setTotalStar] = useState(route.params.totalStar);
+    const [status, setStatus] = useState(route.params.status);
+    console.log(route.params);
 
     const handleEnd = () => {
         database()
-            .ref('Payment/' + idUser + '/' + idPay)
+            .ref('Payment/' + idPay)
             .update({
                 status: "3",
             })
@@ -42,32 +30,7 @@ const OrderDetail = ({ navigation, route }) => {
     return (
         <View style={{ flex: 1 }}>
             <ScrollView style={{ flex: 1, marginBottom: 100 }}>
-                <View style={{
-                    width: '100%',
-                    height: 60,
-                    backgroundColor: '#AA0000',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}>
-                    <Text style={{ color: 'yellow', fontWeight: 'bold', fontSize: 18 }}>Chi tiết đơn hàng</Text>
-                </View>
-                <TouchableOpacity
-                    onPress={() => {
-                        navigation.goBack()
-                    }}
-                    style={{
-                        position: 'absolute',
-                        top: 15,
-                        left: 15,
-                    }}>
-                    <Image
-                        source={require('../Images/back.png')}
-                        style={{
-                            width: 35,
-                            height: 35,
-                            tintColor: 'yellow',
-                        }} />
-                </TouchableOpacity>
+                <Header navigation={navigation} text={'Chi tiết đơn hàng'} />
 
                 <View style={{
                     width: '100%',
@@ -76,23 +39,8 @@ const OrderDetail = ({ navigation, route }) => {
                     borderBottomWidth: 5,
                     borderBottomColor: '#DDDDDD',
                 }}>
-                    <View style={{ flexDirection: 'row', paddingBottom: 10 }}>
-                        <Image
-                            source={require('../Images/location.png')}
-                            style={{
-                                width: 24,
-                                height: 24,
-                                tintColor: 'red',
-                                marginRight: 10,
-                            }} />
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'red' }}>Địa chỉ nhận hàng</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', marginBottom: 5, justifyContent: 'flex-start', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 20 }}>{address.name}</Text>
-                        <Text style={{ fontSize: 20 }}> | </Text>
-                        <Text style={{ fontSize: 20 }}>{address.phone}</Text>
-                    </View>
-                    <Text style={{ marginBottom: 5, fontSize: 20 }}>{address.home}, {address.address}</Text>
+                    <CheckoutCart icon={require('../Images/codeproduct.png')} text={'Mã đơn hàng'} />
+                    <Text style={{ marginBottom: 5, fontSize: 20, fontWeight: 'bold' }}>{id}</Text>
                 </View>
 
                 <View style={{
@@ -102,17 +50,21 @@ const OrderDetail = ({ navigation, route }) => {
                     borderBottomWidth: 5,
                     borderBottomColor: '#DDDDDD',
                 }}>
-                    <View style={{ flexDirection: 'row', paddingBottom: 10 }}>
-                        <Image
-                            source={require('../Images/date.png')}
-                            style={{
-                                width: 24,
-                                height: 24,
-                                tintColor: 'red',
-                                marginRight: 10,
-                            }} />
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'red' }}>Ngày đặt hàng</Text>
+                    <CheckoutCart icon={require('../Images/location.png')} text={'Địa chỉ nhận hàng'} />
+                    <View style={{ marginBottom: 5, justifyContent: 'flex-start' }}>
+                        <Text style={{ fontSize: 20 }}>{address.name} | {address.phone}</Text>
+                        <Text style={{ marginBottom: 5, fontSize: 20 }}>{address.home}, {address.address}</Text>
                     </View>
+                </View>
+
+                <View style={{
+                    width: '100%',
+                    backgroundColor: '#fff',
+                    padding: 15,
+                    borderBottomWidth: 5,
+                    borderBottomColor: '#DDDDDD',
+                }}>
+                    <CheckoutCart icon={require('../Images/date.png')} text={'Ngày đặt hàng'} />
                     <Text style={{ marginBottom: 5, fontSize: 20 }}>{date}</Text>
                 </View>
 
@@ -123,17 +75,7 @@ const OrderDetail = ({ navigation, route }) => {
                     borderBottomWidth: 5,
                     borderBottomColor: '#DDDDDD',
                 }}>
-                    <View style={{ flexDirection: 'row', paddingBottom: 10 }}>
-                        <Image
-                            source={require('../Images/pay.png')}
-                            style={{
-                                width: 24,
-                                height: 24,
-                                tintColor: 'red',
-                                marginRight: 10,
-                            }} />
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'red' }}>Thanh toán</Text>
-                    </View>
+                    <CheckoutCart icon={require('../Images/pay.png')} text={'Thanh toán'} />
                     <Text style={{ marginBottom: 5, fontSize: 20, fontWeight: 'bold', color: 'red' }}>Tổng cộng:   {total}</Text>
                     <Text style={{ marginBottom: 5, fontSize: 20, fontWeight: 'bold', color: '#FFCC00' }}>Điểm tích lũy:   {totalStar}</Text>
                 </View>
@@ -145,17 +87,7 @@ const OrderDetail = ({ navigation, route }) => {
                     borderBottomWidth: 5,
                     borderBottomColor: '#DDDDDD',
                 }}>
-                    <View style={{ flexDirection: 'row', paddingBottom: 10, marginBottom: 5 }}>
-                        <Image
-                            source={require('../Images/list.png')}
-                            style={{
-                                width: 24,
-                                height: 24,
-                                tintColor: 'red',
-                                marginRight: 10,
-                            }} />
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'red' }}>Danh sách sản phẩm</Text>
-                    </View>
+                    <CheckoutCart icon={require('../Images/list.png')} text={'Danh sách sản phẩm'} />
                     {
                         item.map((item, index) => {
                             return (

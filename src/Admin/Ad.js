@@ -6,7 +6,6 @@ import Order from '../Drawer/Order'
 import Voucher from '../Drawer/Voucher'
 import Category from '../Drawer/Category'
 import Slider from '../Drawer/Slider'
-import Pay from '../Drawer/Pay';
 
 const Drawer = createDrawerNavigator();
 
@@ -36,10 +35,6 @@ const Ad = () => {
       <Drawer.Screen
         name="Quản lý banner quảng cáo"
         component={Slider} />
-
-      <Drawer.Screen
-        name="Quản lý thanh toán"
-        component={Pay} />
 
     </Drawer.Navigator>
   )

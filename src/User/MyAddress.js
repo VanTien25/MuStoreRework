@@ -52,7 +52,7 @@ const MyAddress = ({ navigation }) => {
             name: item.name,
             phone: item.phone,
             home: item.home,
-            address: item.address,
+            city: item.city,
           })
         })
         setListAddress(array);
@@ -96,7 +96,7 @@ const MyAddress = ({ navigation }) => {
                       <Text style={{ fontSize: 18 }}> | </Text>
                       <Text style={{ fontSize: 18 }}>{item.phone}</Text>
                     </View>
-                    <Text style={{ color: 'black', marginBottom: 5 }}>{item.home}, {item.address}</Text>
+                    <Text style={{ color: 'black', marginBottom: 5 }}>{item.home}, {item.city}</Text>
                   </View>
                 </TouchableOpacity>
               </Swipeable>
