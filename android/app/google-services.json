@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "824765623428",
+    "project_id": "mustore-1cbbb",
+    "storage_bucket": "mustore-1cbbb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:824765623428:android:e8d0f88d0169a18463a6d1",
+        "android_client_info": {
+          "package_name": "com.mustore"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "824765623428-g2cm2sm3jg539lrm4fp8kngcv856kism.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mustore",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "824765623428-037qrpcp1e4scihk94hlc5pfb44ver70.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjWz29bQdniZCZIWk1t0wPNHiXhxsbTow"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "824765623428-037qrpcp1e4scihk94hlc5pfb44ver70.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
